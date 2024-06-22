@@ -1,12 +1,13 @@
+import logs
+import os
 import re
 import requests
 from bs4 import BeautifulSoup
 import gzip
 import language_tool_python
+import logging
 
-from logs import logger
-
-
+logger = logging.getLogger(__name__)
 
 
 class ExtractorServices:
@@ -68,7 +69,7 @@ class ExtractorServices:
             return f.readlines()
         
     def replaces(self, string_text: str):
-        logger.info("Replacing chars for split later...")
+        
         for (key, value) in self.replacers.items():
         
             string_text =  string_text.replace(key, value)
@@ -98,8 +99,44 @@ class ExtractorServices:
         
         #return not_duplicated_phrases
 
-            
+    def filter_valid_phrases(self, base_set):
+        logger.info("Filtering valid sentences...")
+        added_space_list = []
+        for line in base_set:
+            phrases = line.split("@")
+            for inner_phrases in phrases:
+                if "#" not in inner_phrases:
+                    non_sharp_inner_phrases = [word for word in inner_phrases.split(" ") if word]
+                    if len(non_sharp_inner_phrases) > 1:
+                        # Adiciona espaço antes de letras maiúsculas
+                        for i, add_space_non_sharp in enumerate(non_sharp_inner_phrases):
+                            if self.count_uppercase_letters(add_space_non_sharp) > 1:
+                                non_sharp_inner_phrases[i] = self.add_space_before_uppercase(add_space_non_sharp)
+                        # Junta as palavras novamente em uma frase
+                        final_phrase = " ".join(non_sharp_inner_phrases)
+                        if self.check_phrase(final_phrase):
+                            added_space_list.append(final_phrase)
+        return added_space_list
 
+
+    def check_if_exist_file(self, filename):
+
+        return os.path.isfile(f'{self.dir_path_base_set}{filename}')
+    
+
+    def extract_valid_phrases(self, url, filename, force: bool = False):
+
+        if self.check_if_exist_file(filename=filename) and not force:
+            base_set = self.read_lines_gzip(filename=filename)
+            
+            return self.filter_valid_phrases(base_set=base_set)
+        
+        else:
+            brute_html = self.get_brute_html(url=url)
+            self.save_cache(brute_html=brute_html, filename=filename)
+            base_set = self.read_lines_gzip(filename=filename)
+            return self.filter_valid_phrases(base_set=base_set)
+            
 
 
 
@@ -116,38 +153,13 @@ if __name__ == "__main__":
     #url='https://imsdb.com/scripts/Shrek.html'
     #filename = "Greetings"
     #url="https://www.englishspeak.com/en/english-phrases"
-    filename="learnenglishteam"
-    url="https://www.learnenglishteam.com/common-daily-english-phrases-for-beginners/"
-    
-    brute_html = extractor.get_brute_html(url=url)
-    extractor.save_cache(brute_html=brute_html, filename=filename)
-    
-    lines = extractor.read_lines_gzip(filename=filename)
-    
-    added_space_list = []
-    for line in lines:
-        phrases = line.split("@")
-        for inner_phrases in phrases:
-            if "#" in inner_phrases:
-                pass
-            else:
-                non_sharp_inner_phrases = inner_phrases.split(" ")
-                while "" in non_sharp_inner_phrases:
-                    non_sharp_inner_phrases.remove("")
-                if len(non_sharp_inner_phrases) <= 1:
-                        pass
-                else:
-                    
-                    for i, add_space_non_sharp in enumerate(non_sharp_inner_phrases):
-                        
-                        if extractor.count_uppercase_letters(add_space_non_sharp) > 1:
-                                non_sharp_inner_phrases[i] = extractor.add_space_before_uppercase(add_space_non_sharp)
-           
-                        else:
-                            pass
-                final_phrase = " ".join(non_sharp_inner_phrases)
-                print(f"{final_phrase} | {extractor.check_phrase(final_phrase)}")
+    #filename="learnenglishteam"
+    #url="https://www.learnenglishteam.com/common-daily-english-phrases-for-beginners/"
+    filename = "englishanyone"
+    url = "https://englishanyone.com/english-phrases/"
 
+    valid_phrases = extractor.extract_valid_phrases(url=url, filename=filename)
+    print(valid_phrases)
 
     
     

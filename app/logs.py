@@ -1,12 +1,14 @@
-# logging_setup.py
 import logging
-
-
+from logging.handlers import RotatingFileHandler
 # Configuração básica
-LOG_FORMAT = "%(levelname)s %(asctime)s - %(message)s"
+LOG_FORMAT = "%(levelname)s | %(asctime)s - %(message)s"
+LOG_FILENAME = "app.log"
+LOG_LEVEL = logging.INFO
+
+
 logging.basicConfig(
-    filename="app.log",
-    level=logging.DEBUG,  # Certifique-se de que o nível de logging seja DEBUG para capturar todas as mensagens
+    filename=LOG_FILENAME,
+    level=LOG_LEVEL,
     format=LOG_FORMAT,
     filemode='w'
 )
@@ -18,5 +20,4 @@ console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.DEBUG)
 console_handler.setFormatter(logging.Formatter(LOG_FORMAT))
 logger.addHandler(console_handler)
-
-
+handler = RotatingFileHandler(LOG_FILENAME, maxBytes=2000, backupCount=5)
