@@ -4,13 +4,23 @@ from bs4 import BeautifulSoup
 import gzip
 import language_tool_python
 
+from logs import logger
+
+
 
 
 class ExtractorServices:
 
     def __init__(self, language_tool: str = 'en-US') -> None:
+        logger.info("Extraction service started...")
         self.tool = language_tool_python.LanguageTool(language_tool)
         self.dir_path_base_set = "./base_sets/"
+        self.gzip_separator = " # "
+        self.replacers = {
+        "?": "? @ ",
+        "!": "! @ ",
+        ".": ". @ "
+        }
 
     def check_phrase(self, phrase):
         # Check the phrase
@@ -21,44 +31,52 @@ class ExtractorServices:
             return False
 
     def get_brute_html(self, url):
-        # url = f'https://imsdb.com/scripts/{self.movie_name}.html'
+        logger.info("Getting html...")
         r = requests.get(url=url)
         return r.text
 
 
-    #  Função para remover tags HTML
+    
     def remove_html_tags(self, html_text):
+        logger.info("Removing html tags...")
         soup = BeautifulSoup(html_text, 'html.parser')
         return soup.get_text()
 
-    
-    def save_cleaned(self, brute_html, filename):
-
-        cleaned_sentences = self.cleaned_sentences(brute_html)
-        
-        
-
+    def save_as_gzip(self, cleaned_sentences, filename):
+        logger.info("Saving as Gzip...")
         with gzip.open(f'{self.dir_path_base_set}{filename}', 'wt', encoding='utf-8') as f:
             for sentence in cleaned_sentences:
-                f.write(sentence + " # ")
+                f.write(sentence + self.gzip_separator)
+
+    
+    def save_cache(self, brute_html, filename):
+        logger.info("Processing cache saving...")        
+
+        cleaned_sentences = self.semi_cleaned_sentences(brute_html)
+        
+        self.save_as_gzip(cleaned_sentences=cleaned_sentences, filename=filename)
 
 
-    def read_from_file(self, filename):
+    def read_gzip(self, filename):
+        logger.info("Reading full Gzip file...")
         with gzip.open(f'{self.dir_path_base_set}{filename}', 'rt', encoding='utf-8') as f:
             return f.read()
 
-    def read_lines_from_file(self, filename):
+    def read_lines_gzip(self, filename):
+        logger.info("Reading lines Gzip file...")
         with gzip.open(f'{self.dir_path_base_set}{filename}', 'rt', encoding='utf-8') as f:
             return f.readlines()
         
     def replaces(self, string_text: str):
+        logger.info("Replacing chars for split later...")
+        for (key, value) in self.replacers.items():
+        
+            string_text =  string_text.replace(key, value)
 
+        return string_text
 
-        new_string_text = string_text.replace("?", "? @ ").replace("!", "! @ ").replace(".", ". @ ")
-
-        return new_string_text
-
-    def cleaned_sentences(self, html_text):
+    def semi_cleaned_sentences(self, html_text):
+        logger.info("Pre-cleaning sentences...")
         html_text_without_tags = self.remove_html_tags(html_text)
         splited_lines = html_text_without_tags.splitlines()
         cleaned_sentences = list()
@@ -92,7 +110,6 @@ class ExtractorServices:
 if __name__ == "__main__":
 
     
-    
     extractor = ExtractorServices()
     
     #filename='Shrek'
@@ -102,10 +119,10 @@ if __name__ == "__main__":
     filename="learnenglishteam"
     url="https://www.learnenglishteam.com/common-daily-english-phrases-for-beginners/"
     
-    #brute_html = extractor.get_brute_html(url=url)
-    #extractor.save_cleaned(brute_html=brute_html, filename=filename)
+    brute_html = extractor.get_brute_html(url=url)
+    extractor.save_cache(brute_html=brute_html, filename=filename)
     
-    lines = extractor.read_lines_from_file(filename=filename)
+    lines = extractor.read_lines_gzip(filename=filename)
     
     added_space_list = []
     for line in lines:
