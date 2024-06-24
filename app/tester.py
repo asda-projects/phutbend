@@ -19,17 +19,17 @@ def get_phrase_level(phrase):
     # Obtain readability metrics
     
     
-    flesch_reading_ease = textstat.flesch_reading_ease(phrase)
     # Flesch Reading Ease: Higher scores indicate easier readability.
+    flesch_reading_ease = textstat.flesch_reading_ease(phrase)
     
-    flesch_kincaid_grade = textstat.flesch_kincaid_grade(phrase)
     # Flesch-Kincaid Grade: Corresponds to U.S. school grade levels.
+    flesch_kincaid_grade = textstat.flesch_kincaid_grade(phrase)
     
     #smog_index = textstat.smog_index(phrase)
     # SMOG Index: Estimates the years of education needed to understand the text.
 
-    coleman_liau_index = textstat.coleman_liau_index(phrase)
     # Coleman-Liau Index: Estimates the U.S. grade level needed to understand the text.
+    coleman_liau_index = textstat.coleman_liau_index(phrase)
 
     # Automated Readability Index: Estimates the U.S. grade level.
     automated_readability_index = textstat.automated_readability_index(phrase)
