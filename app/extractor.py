@@ -126,16 +126,16 @@ class ExtractorServices:
 
     def extract_valid_phrases(self, url, filename, force: bool = False):
 
-        if self.check_if_exist_file(filename=filename) and not force:
-            base_set = self.read_lines_gzip(filename=filename)
-            
-            return self.filter_valid_phrases(base_set=base_set)
-        
-        else:
+        if not self.check_if_exist_file(filename=filename) or force:
             brute_html = self.get_brute_html(url=url)
             self.save_cache(brute_html=brute_html, filename=filename)
-            base_set = self.read_lines_gzip(filename=filename)
-            return self.filter_valid_phrases(base_set=base_set)
+
+
+        base_set = self.read_lines_gzip(filename=filename)
+    
+        return self.filter_valid_phrases(base_set=base_set)
+        
+
             
 
 
@@ -149,12 +149,17 @@ if __name__ == "__main__":
     
     extractor = ExtractorServices()
     
-    #filename='Shrek'
-    #url='https://imsdb.com/scripts/Shrek.html'
-    #filename = "Greetings"
-    #url="https://www.englishspeak.com/en/english-phrases"
-    #filename="learnenglishteam"
-    #url="https://www.learnenglishteam.com/common-daily-english-phrases-for-beginners/"
+
+    to_extract = {
+        "Shrek": "https://imsdb.com/scripts/Shrek.html",
+        "Greetings": "https://www.englishspeak.com/en/english-phrases",
+        "learnenglishteam": "https://www.learnenglishteam.com/common-daily-english-phrases-for-beginners/",
+        "englishanyone": "https://englishanyone.com/english-phrases/"
+
+    }
+
+
+    
     filename = "englishanyone"
     url = "https://englishanyone.com/english-phrases/"
 
