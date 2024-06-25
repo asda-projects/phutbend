@@ -41,7 +41,7 @@ class PhrasesComplexityClassifier():
 
     def metric_weight_dict(self, phrase) -> dict:
         # Flesch Reading Ease: Higher scores indicate easier readability.
-        _flesch_reading_ease = flesch_reading_ease(phrase)
+        _flesch_reading_ease = flesch_reading_ease(phrase) 
         
         # Flesch-Kincaid Grade: Corresponds to U.S. school grade levels.
         _flesch_kincaid_grade = flesch_kincaid_grade(phrase)
@@ -59,7 +59,7 @@ class PhrasesComplexityClassifier():
         _dale_chall_readability_score = dale_chall_readability_score(phrase)
         
         # Difficult Words: Counts the number of complex words in the text.
-        _difficult_words = difficult_words(phrase)
+        _difficult_words = difficult_words(phrase) 
         
         # Linsear Write Formula: Estimates the U.S. grade level.
         _linsear_write_formula = linsear_write_formula(phrase)
@@ -69,12 +69,12 @@ class PhrasesComplexityClassifier():
 
 
         return {
-        "flesch_reading_ease": (_flesch_reading_ease, self.flesch_reading_ease_weight),
-        "flesch_kincaid_grade": (_flesch_kincaid_grade, self.flesch_kincaid_grade_weight),
+        #"flesch_reading_ease": (_flesch_reading_ease, self.flesch_reading_ease_weight),
+        #"flesch_kincaid_grade": (_flesch_kincaid_grade, self.flesch_kincaid_grade_weight),
         # smog_index: 0.001,
         "coleman_liau_index": (_coleman_liau_index, self.coleman_liau_index_weight),
         "automated_readability_index": (_automated_readability_index, self.automated_readability_index_weight),
-        "dale_chall_readability_score": (_dale_chall_readability_score, self.dale_chall_readability_score_weight),
+        #"dale_chall_readability_score": (_dale_chall_readability_score, self.dale_chall_readability_score_weight),
         "difficult_words": (_difficult_words, self.difficult_words_weight), 
         "linsear_write_formula": (_linsear_write_formula,self.linsear_write_formula_weight), 
         "gunning_fog": (_gunning_fog, self.gunning_fog_weight)
@@ -106,12 +106,12 @@ class PhrasesComplexityClassifier():
 
         
         mapped_compound_dict = {
-        (0, 0.25): "A1",
-        (0.25, 0.35): "A2",
-        (0.35, 0.5): "B1",
-        (0.5, 0.65): "B2",
-        (0.65, 0.8): "C1",
-        (0.8, 1): "C2",
+        (0, 1): "A1",
+        (1, 1.5): "A2",
+        (1.5, 2): "B1",
+        (2, 3.5): "B2",
+        (3.5, 4.5): "C1",
+        (4.5, 10): "C2",
         }
 
         if swap:
@@ -121,12 +121,12 @@ class PhrasesComplexityClassifier():
             return mapped_compound_dict
         
     def log_metrics_info(self, metric_weight: dict) -> None:
-        logger.info(f'Flesch Reading Ease: {metric_weight.get("flesch_reading_ease")[0]} - {metric_weight.get("flesch_reading_ease")[1]} Higher scores indicate easier readability. \n')
-        logger.info(f'Flesch-Kincaid Grade: {metric_weight.get("flesch_kincaid_grade")[0]} - {metric_weight.get("flesch_kincaid_grade")[1]} Corresponds to U.S. school grade levels. \n')
+        #logger.info(f'Flesch Reading Ease: {metric_weight.get("flesch_reading_ease")[0]} - {metric_weight.get("flesch_reading_ease")[1]} Higher scores indicate easier readability. \n')
+        #logger.info(f'Flesch-Kincaid Grade: {metric_weight.get("flesch_kincaid_grade")[0]} - {metric_weight.get("flesch_kincaid_grade")[1]} Corresponds to U.S. school grade levels. \n')
         # print(f"SMOG Index: {smog_index} - {metric_weights.get(smog_index)}\nEstimates the years of education needed to understand the text.\n")
         logger.info(f'Coleman-Liau Index: {metric_weight.get("coleman_liau_index")[0]} - {metric_weight.get("coleman_liau_index")[1]} Estimates the U.S. grade level needed to understand the text. \n')
         logger.info(f'Automated Readability Index: {metric_weight.get("automated_readability_index")[0]} - {metric_weight.get("automated_readability_index")[1]} Estimates the U.S. grade level. \n')
-        logger.info(f'Dale-Chall Readability Score: {metric_weight.get("dale_chall_readability_score")[0]} - {metric_weight.get("dale_chall_readability_score")[1]} Uses a list of common words to assess readability. \n')
+        #logger.info(f'Dale-Chall Readability Score: {metric_weight.get("dale_chall_readability_score")[0]} - {metric_weight.get("dale_chall_readability_score")[1]} Uses a list of common words to assess readability. \n')
         logger.info(f'Difficult Words: {metric_weight.get("difficult_words")[0]} - {metric_weight.get("difficult_words")[1]} Counts the number of complex words in the text. \n')
         logger.info(f'Linsear Write Formula: {metric_weight.get("linsear_write_formula")[0]} - {metric_weight.get("linsear_write_formula")[1]} Estimates the U.S. grade level. \n')
         logger.info(f'Gunning Fog Index: {metric_weight.get("gunning_fog")[0]} - {metric_weight.get("gunning_fog")[1]} Estimates the years of formal education needed to understand the text. \n')    
@@ -142,9 +142,9 @@ class PhrasesComplexityClassifier():
         
         scores = self.get_scores(metric_weight)
 
-        normalized_scores = self.normalize_scores(scores)
+        # normalized_scores = self.normalize_scores(scores)
 
-        composed_index = self.compose_index(normalized_scores, weights)
+        composed_index = self.compose_index(scores, weights)
 
 
         mapped_compound = self.map_compound(swap=False)
@@ -156,9 +156,15 @@ class PhrasesComplexityClassifier():
                 
                 return level
             
-            elif composed_index > max_range and max_range == 1:
+            elif composed_index < min_range and min_range == 0:
 
                 return level
+            
+            elif composed_index > max_range and max_range == 10:
+
+                return level
+            
+
 
 
     
@@ -177,21 +183,21 @@ class PhrasesComplexityClassifier():
 if __name__ == "__main__":
 
     pcc = PhrasesComplexityClassifier(
-        flesch_reading_ease_weight=0.1,
-        flesch_kincaid_grade_weight=1.5,
-        coleman_liau_index_weight=2,
-        automated_readability_index_weight=2,
-        dale_chall_readability_score_weight=0.001,
-        difficult_words_weight=2, 
-        linsear_write_formula_weight=2, 
-        gunning_fog_weight=-0.8
+        flesch_reading_ease_weight=0,
+        flesch_kincaid_grade_weight=0,
+        coleman_liau_index_weight=0.1,
+        automated_readability_index_weight=0.1,
+        dale_chall_readability_score_weight=0,
+        difficult_words_weight=0.1, 
+        linsear_write_formula_weight=0.1, 
+        gunning_fog_weight=0.01
         )
 
     phrases = {
     "A1": "The cat is on the table.",
     "A2": "She likes to watch movies on weekends.",
-    "B1": "I have been learning English for three years.",
-    "B2": "She enjoys playing the piano in her free time and often performs at local events.",
+    "B1": "I have been learning English for three years.", 
+    "B2": "She enjoys playing the piano in her free time and often performs at local events.", 
     "C1": "Despite the challenges, she managed to complete the project on time and impressed her supervisors.",
     "C2": "Having studied abroad for several years, he possesses a profound understanding of cultural nuances and linguistic subtleties."
     }
