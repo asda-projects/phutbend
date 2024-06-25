@@ -4,7 +4,7 @@ from logging.handlers import RotatingFileHandler
 LOG_FORMAT = "%(levelname)s | %(asctime)s - %(message)s"
 LOG_FILENAME = "app.log"
 LOG_LEVEL = logging.INFO
-
+LOG_NAME = "PHUTBEND"
 
 logging.basicConfig(
     filename=LOG_FILENAME,

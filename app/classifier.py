@@ -2,8 +2,10 @@ import logs
 from sklearn.preprocessing import MinMaxScaler
 import numpy as np
 from textstat import flesch_reading_ease, flesch_kincaid_grade, coleman_liau_index, automated_readability_index,dale_chall_readability_score,difficult_words,linsear_write_formula,gunning_fog
+from extractor import ExtractorServices
 
 import logging
+
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +19,9 @@ class PhrasesComplexityClassifier():
                  dale_chall_readability_score_weight, 
                  difficult_words_weight, 
                  linsear_write_formula_weight, 
-                 gunning_fog_weight) -> None:
+                 gunning_fog_weight,
+                 show_logs = True
+                 ) -> None:
         
         self.scaler = MinMaxScaler()
         self.flesch_reading_ease_weight = flesch_reading_ease_weight
@@ -29,6 +33,7 @@ class PhrasesComplexityClassifier():
         self.difficult_words_weight = difficult_words_weight
         self.linsear_write_formula_weight =  linsear_write_formula_weight 
         self.gunning_fog_weight = gunning_fog_weight
+        self.show_logs = show_logs
 
     def normalize_scores(self, scores):
         #logger.info(f"Before Normalize: {scores}")
@@ -97,8 +102,10 @@ class PhrasesComplexityClassifier():
     def compose_index(self, normalized_scores, weights) -> int:
 
         cpi = sum(score * weight for score, weight in zip(normalized_scores, weights))
-        logger.info("-"*171)
-        logger.info(f"Actual Composite Index: {cpi}")
+        
+        if self.show_logs:
+            logger.info("-"*171)
+            logger.info(f"Actual Composite Index: {cpi}")
         
         return cpi
     
@@ -121,15 +128,17 @@ class PhrasesComplexityClassifier():
             return mapped_compound_dict
         
     def log_metrics_info(self, metric_weight: dict) -> None:
-        #logger.info(f'Flesch Reading Ease: {metric_weight.get("flesch_reading_ease")[0]} - {metric_weight.get("flesch_reading_ease")[1]} Higher scores indicate easier readability. \n')
-        #logger.info(f'Flesch-Kincaid Grade: {metric_weight.get("flesch_kincaid_grade")[0]} - {metric_weight.get("flesch_kincaid_grade")[1]} Corresponds to U.S. school grade levels. \n')
-        # print(f"SMOG Index: {smog_index} - {metric_weights.get(smog_index)}\nEstimates the years of education needed to understand the text.\n")
-        logger.info(f'Coleman-Liau Index: {metric_weight.get("coleman_liau_index")[0]} - {metric_weight.get("coleman_liau_index")[1]} Estimates the U.S. grade level needed to understand the text. \n')
-        logger.info(f'Automated Readability Index: {metric_weight.get("automated_readability_index")[0]} - {metric_weight.get("automated_readability_index")[1]} Estimates the U.S. grade level. \n')
-        #logger.info(f'Dale-Chall Readability Score: {metric_weight.get("dale_chall_readability_score")[0]} - {metric_weight.get("dale_chall_readability_score")[1]} Uses a list of common words to assess readability. \n')
-        logger.info(f'Difficult Words: {metric_weight.get("difficult_words")[0]} - {metric_weight.get("difficult_words")[1]} Counts the number of complex words in the text. \n')
-        logger.info(f'Linsear Write Formula: {metric_weight.get("linsear_write_formula")[0]} - {metric_weight.get("linsear_write_formula")[1]} Estimates the U.S. grade level. \n')
-        logger.info(f'Gunning Fog Index: {metric_weight.get("gunning_fog")[0]} - {metric_weight.get("gunning_fog")[1]} Estimates the years of formal education needed to understand the text. \n')    
+        
+        if self.show_logs:
+            #logger.info(f'Flesch Reading Ease: {metric_weight.get("flesch_reading_ease")[0]} - {metric_weight.get("flesch_reading_ease")[1]} Higher scores indicate easier readability. \n')
+            #logger.info(f'Flesch-Kincaid Grade: {metric_weight.get("flesch_kincaid_grade")[0]} - {metric_weight.get("flesch_kincaid_grade")[1]} Corresponds to U.S. school grade levels. \n')
+            # print(f"SMOG Index: {smog_index} - {metric_weights.get(smog_index)}\nEstimates the years of education needed to understand the text.\n")
+            logger.info(f'Coleman-Liau Index: {metric_weight.get("coleman_liau_index")[0]} - {metric_weight.get("coleman_liau_index")[1]} Estimates the U.S. grade level needed to understand the text. \n')
+            logger.info(f'Automated Readability Index: {metric_weight.get("automated_readability_index")[0]} - {metric_weight.get("automated_readability_index")[1]} Estimates the U.S. grade level. \n')
+            #logger.info(f'Dale-Chall Readability Score: {metric_weight.get("dale_chall_readability_score")[0]} - {metric_weight.get("dale_chall_readability_score")[1]} Uses a list of common words to assess readability. \n')
+            logger.info(f'Difficult Words: {metric_weight.get("difficult_words")[0]} - {metric_weight.get("difficult_words")[1]} Counts the number of complex words in the text. \n')
+            logger.info(f'Linsear Write Formula: {metric_weight.get("linsear_write_formula")[0]} - {metric_weight.get("linsear_write_formula")[1]} Estimates the U.S. grade level. \n')
+            logger.info(f'Gunning Fog Index: {metric_weight.get("gunning_fog")[0]} - {metric_weight.get("gunning_fog")[1]} Estimates the years of formal education needed to understand the text. \n')    
 
 
     def classify_phrase_level(self, phrase) -> str:
@@ -172,10 +181,11 @@ class PhrasesComplexityClassifier():
 
         for goal_level, phrase in example_phrases.items():
             level = self.classify_phrase_level(phrase)
-            logger.info(f"Desired Composite Index: {self.map_compound(swap=True).get(goal_level)}")
-            logger.info(f"Actual Level {level} | Desired Level {goal_level}")
-            logger.info(f"Phrase: {phrase}")
-            logger.info("="*375)
+            if self.show_logs:
+                logger.info(f"Desired Composite Index: {self.map_compound(swap=True).get(goal_level)}")
+                logger.info(f"Actual Level {level} | Desired Level {goal_level}")
+                logger.info(f"Phrase: {phrase}")
+                logger.info("="*375)
 
         
 
@@ -190,9 +200,26 @@ if __name__ == "__main__":
         dale_chall_readability_score_weight=0,
         difficult_words_weight=0.1, 
         linsear_write_formula_weight=0.1, 
-        gunning_fog_weight=0.01
+        gunning_fog_weight=0.01,
+        show_logs=False
         )
 
+    extractor = ExtractorServices()
+
+    filename = "englishanyone"
+    url = "https://englishanyone.com/english-phrases/"
+
+    valid_phrases = extractor.extract_valid_phrases(url=url, filename=filename)
+
+
+    for phrase in valid_phrases:
+        level = pcc.classify_phrase_level(phrase)
+        logger.info(f"Phrase: {phrase} || Level {level}")
+
+
+
+
+"""
     phrases = {
     "A1": "The cat is on the table.",
     "A2": "She likes to watch movies on weekends.",
@@ -206,3 +233,4 @@ if __name__ == "__main__":
     
 
 
+"""
