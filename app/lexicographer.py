@@ -1,3 +1,4 @@
+from time import sleep
 import requests
 import brotli
 import json
@@ -110,12 +111,28 @@ class LexicalAnalyzer:
     def romanize_transliteration(self, tokens: list) -> str:
         self.logger.log_debug("Romanizing transliteration...")
         return " ".join(romanize(token, engine=self.transliteration_engine) for token in tokens)
+    
+    def get_thai_phrase_with_retry(self, phrase: str, tries=2, seconds_interval_to_try=4)-> tuple:
 
-    def thai_and_romanized(self, phrase) -> tuple:
+        for _ in range(0, tries):
+            answer = self.get_thai_translation_in_thai_alphabet(phrase)
+            thai_phrase = answer.get("translated_text", None)
+            if thai_phrase:
+                return thai_phrase
+            else:
+                self.logger.log_info(
+                    f"Not received thai translation in thai alphabet ({thai_phrase}), \
+                    retry (max tries {tries}) request in {seconds_interval_to_try} seconds..."
+                    )
+                sleep(seconds_interval_to_try)
+        
+        return None
+
+        
+    def thai_and_romanized(self, phrase: str) -> tuple:
         self.logger.log_debug("Return Thai and Romanized phrase...")
         
-        answer = self.get_thai_translation_in_thai_alphabet(phrase)
-        thai_phrase = answer.get("translated_text", None)
+        thai_phrase = self.get_thai_phrase_with_retry(phrase, tries=2, seconds_interval_to_try=3)
 
         if not thai_phrase:
             return "", ""

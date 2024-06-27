@@ -25,10 +25,26 @@ lexical = LexicalAnalyzer( transliteration_engine= "ita", show_logs=True)
 filename = "englishanyone"
 url = "https://englishanyone.com/english-phrases/"
 
-valid_phrases = extractor.extract_valid_phrases(url=url, filename=filename)
+# valid_phrases = extractor.extract_valid_phrases(url=url, filename=filename)
+
+phrases = [
+    "Could Would you please bring me some ?",
+    "How spicy is ?",
+    "And it can leave you feeling the side effects the day after.",
+    "So use this phrase to check how spicy the food you want to order is.",
+    "How spicy is the curry?",
+    "How spicy is it?",
+    "Can we have the bill, please?",
+    "Can we have the bill, please?",
+    "Were in a bit of a hurry.",
+    "Could we split the bill, please?",
+    "You can also ask Can we get separate checks?",
+    "We can help you get the natural practice you need, all by yourself, with our English fluency course.",
+    "With our expert guidance and resources, you can take your speaking skills to the next level."
+]
 
 
-for phrase in valid_phrases:
+for phrase in phrases:
     level = pcc.classify_phrase_level(phrase)
     thai_phrase, romanized_phrase = lexical.thai_and_romanized(phrase)
     
