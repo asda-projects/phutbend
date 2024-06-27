@@ -12,8 +12,7 @@ logger = logging.getLogger(__name__)
 
 class ExtractorServices:
 
-    def __init__(self, language_tool: str = 'en-US') -> None:
-        logger.info("Extraction service started...")
+    def __init__(self, language_tool: str = 'en-US', show_logs = True) -> None:
         self.tool = language_tool_python.LanguageTool(language_tool)
         self.dir_path_base_set = "./base_sets/"
         self.gzip_separator = " # "
@@ -22,8 +21,13 @@ class ExtractorServices:
         "!": "! @ ",
         ".": ". @ "
         }
+        self.logger = logs.LogController(show_logs)
+        self.logger.log_info("Starting Extraction Services...")
+    
+
 
     def check_phrase(self, phrase):
+        self.logger.log_debug("Checking phrases")
         # Check the phrase
         matches = self.tool.check(phrase)
         if not matches:
@@ -32,26 +36,26 @@ class ExtractorServices:
             return False
 
     def get_brute_html(self, url):
-        logger.info("Getting html...")
+        self.logger.log_debug("Getting html...")
         r = requests.get(url=url)
         return r.text
 
 
     
     def remove_html_tags(self, html_text):
-        logger.info("Removing html tags...")
+        self.logger.log_debug("Removing html tags...")
         soup = BeautifulSoup(html_text, 'html.parser')
         return soup.get_text()
 
     def save_as_gzip(self, cleaned_sentences, filename):
-        logger.info("Saving as Gzip...")
+        self.logger.log_debug("Saving as Gzip...")
         with gzip.open(f'{self.dir_path_base_set}{filename}', 'wt', encoding='utf-8') as f:
             for sentence in cleaned_sentences:
                 f.write(sentence + self.gzip_separator)
 
     
     def save_cache(self, brute_html, filename):
-        logger.info("Processing cache saving...")        
+        self.logger.log_debug("Processing cache saving...")        
 
         cleaned_sentences = self.semi_cleaned_sentences(brute_html)
         
@@ -59,12 +63,12 @@ class ExtractorServices:
 
 
     def read_gzip(self, filename):
-        logger.info("Reading full Gzip file...")
+        self.logger.log_debug("Reading full Gzip file...")
         with gzip.open(f'{self.dir_path_base_set}{filename}', 'rt', encoding='utf-8') as f:
             return f.read()
 
     def read_lines_gzip(self, filename):
-        logger.info("Reading lines Gzip file...")
+        self.logger.log_debug("Reading lines Gzip file...")
         with gzip.open(f'{self.dir_path_base_set}{filename}', 'rt', encoding='utf-8') as f:
             return f.readlines()
         
@@ -77,7 +81,7 @@ class ExtractorServices:
         return string_text
 
     def semi_cleaned_sentences(self, html_text):
-        logger.info("Pre-cleaning sentences...")
+        self.logger.log_info("Pre-cleaning sentences...")
         html_text_without_tags = self.remove_html_tags(html_text)
         splited_lines = html_text_without_tags.splitlines()
         cleaned_sentences = list()
@@ -100,7 +104,7 @@ class ExtractorServices:
         #return not_duplicated_phrases
 
     def filter_valid_phrases(self, base_set):
-        logger.info("Filtering valid sentences...")
+        self.logger.log_info("Filtering valid sentences...")
         added_space_list = []
         for line in base_set:
             phrases = line.split("@")
@@ -120,12 +124,12 @@ class ExtractorServices:
 
 
     def check_if_exist_file(self, filename):
-
+        self.logger.log_debug("Checking if file exist...")
         return os.path.isfile(f'{self.dir_path_base_set}{filename}')
     
 
     def extract_valid_phrases(self, url, filename, force: bool = False):
-
+        self.logger.log_debug("Extracting valid phrases...")
         if not self.check_if_exist_file(filename=filename) or force:
             brute_html = self.get_brute_html(url=url)
             self.save_cache(brute_html=brute_html, filename=filename)
@@ -164,7 +168,7 @@ if __name__ == "__main__":
     url = "https://englishanyone.com/english-phrases/"
 
     valid_phrases = extractor.extract_valid_phrases(url=url, filename=filename)
-    print(valid_phrases)
+    
 
     
     
