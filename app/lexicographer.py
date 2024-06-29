@@ -1,3 +1,4 @@
+import re
 from time import sleep
 import requests
 import brotli
@@ -31,22 +32,33 @@ class LexicalAnalyzer:
             self.logger.log_debug("Brotli decompression failed....")
             return request_response.text
 
+    def _try_json_loads(self, respose_text):
+
+        
+        try:
+            return json.loads(respose_text)
+        except (json.JSONDecodeError, json.decoder.JSONDecodeError) as jde:
+            self.logger.log_info(f"Error ({jde}) to decode response ({respose_text}) of type ({type(respose_text)}) into JSON ....")
+            return {}
+        except TypeError as te:
+            self.logger.log_info(f"Error ({te}) to decode response ({respose_text}) of type ({type(respose_text)}) into JSON ....")
+            return {}   
+
+
     def json_parse(self, respose_text) -> dict:
         self.logger.log_debug("JSON decode started....")        
 
-        type_response_text = type(respose_text)
 
-        if type_response_text != type(dict):
-            try:
-                return json.loads(respose_text)
-            except (json.JSONDecodeError, json.decoder.JSONDecodeError) as jde:
-                self.logger.log_debug(f"Error ({jde}) to decode response ({respose_text}) of type ({type_response_text}) into JSON ....")
-                return {}
-            except TypeError as te:
-                self.logger.log_debug(f"Error ({te}) to decode response ({respose_text}) of type ({type_response_text}) into JSON ....")
-                return {}   
-        
+        if type(respose_text) == type(""):
+            self.logger.log_info("Trying to parse response type equal str...")
+            return self._try_json_loads(respose_text)
+            
+        elif isinstance(respose_text, requests.models.Response):
+            self.logger.log_info("Trying to parse response type equal requests.Response...")
+            return self._try_json_loads(respose_text.text) 
+
         else:
+            self.logger.log_info(f"None of parsement available match to {type(respose_text)}...")
             return respose_text
     
     def handle_response(self, request_response: requests.Response) -> str:
@@ -85,7 +97,7 @@ class LexicalAnalyzer:
 
         return self.handle_response(r)
 
-    def get_words_from_phrase(self, phrase) -> dict:
+    def search_in_dictonary_words_phrase(self, phrase) -> dict:
 
         self.logger.log_debug("Geetting word meanings...")
 
@@ -128,7 +140,20 @@ class LexicalAnalyzer:
         
         return None
 
+    def remove_special_chars_from_list(self, word_list: list) -> list:
+
+        cleaned_words = []
+
+        special_chars_to_remove = "!@#$%^&*()_+{}|\][\<>/.,?"
         
+        
+        for word in word_list:
+            if word not in special_chars_to_remove:
+                cleaned_words.append(word)
+        
+        
+        return cleaned_words
+
     def thai_and_romanized(self, phrase: str) -> tuple:
         self.logger.log_debug("Return Thai and Romanized phrase...")
         
@@ -149,15 +174,26 @@ if __name__ == "__main__":
 
     lexical = LexicalAnalyzer()
 
-    phrase = "Can we have the bill, please?"
+    phrase = "How spicy is it?"
 
-    # answer = lexical.get_words_from_phrase(phrase)
+    # answer = lexical.search_in_dictonary_words_phrase(phrase)
     answer = lexical.get_thai_translation_in_thai_alphabet(phrase)
     
     thai_phrase = answer.get("translated_text", None)
 
     tokenize_thai_phrase = lexical.tokenize_thai_alphabet(thai_phrase)
 
-    romanized_phrase = lexical.romanize_transliteration(tokenize_thai_phrase)
+    lexical.logger.log_info(f"\nThai Alphabet {thai_phrase}")
 
-    lexical.logger.log_info(f"Thai Alphabet {thai_phrase} ||  RTGS transliteration {romanized_phrase}")
+    for word in lexical.remove_special_chars_from_list(tokenize_thai_phrase):
+
+        search_result = lexical.search_in_dictonary_words_phrase(word)
+        search_result_prettyfied = json.dumps(search_result, indent=2)
+        lexical.logger.log_info(f"\n\n{search_result_prettyfied}")
+
+
+    #romanized_phrase = lexical.romanize_transliteration(tokenize_thai_phrase)
+
+    #lexical.logger.log_info(f"Thai Alphabet {thai_phrase} ||  RTGS transliteration {romanized_phrase}")
+
+    
