@@ -54,7 +54,7 @@ class LexicalAnalyzer:
             return self._try_json_loads(respose_text)
             
         elif isinstance(respose_text, requests.models.Response):
-            self.logger.log_info("Trying to parse response type equal requests.Response...")
+            self.logger.log_info("Trying to parse response type equal requests.models.Response...")
             return self._try_json_loads(respose_text.text) 
 
         else:
@@ -188,7 +188,7 @@ if __name__ == "__main__":
     for word in lexical.remove_special_chars_from_list(tokenize_thai_phrase):
 
         search_result = lexical.search_in_dictonary_words_phrase(word)
-        search_result_prettyfied = json.dumps(search_result, indent=2)
+        search_result_prettyfied = json.dumps(search_result, indent=4, ensure_ascii=False)
         lexical.logger.log_info(f"\n\n{search_result_prettyfied}")
 
 

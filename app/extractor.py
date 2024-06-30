@@ -107,19 +107,53 @@ class ExtractorServices:
         self.logger.log_info("Filtering valid sentences...")
         added_space_list = []
         for line in base_set:
+            
             phrases = line.split("@")
             for inner_phrases in phrases:
+                
                 if "#" not in inner_phrases:
+                    
                     non_sharp_inner_phrases = [word for word in inner_phrases.split(" ") if word]
                     if len(non_sharp_inner_phrases) > 1:
                         # Adiciona espaço antes de letras maiúsculas
+                        
                         for i, add_space_non_sharp in enumerate(non_sharp_inner_phrases):
+                            
                             if self.count_uppercase_letters(add_space_non_sharp) > 1:
+                                
                                 non_sharp_inner_phrases[i] = self.add_space_before_uppercase(add_space_non_sharp)
+                               
                         # Junta as palavras novamente em uma frase
+
                         final_phrase = " ".join(non_sharp_inner_phrases)
+                        
                         if self.check_phrase(final_phrase):
+                            self.logger.log_debug(f"NON-SHARP PHRASE: {final_phrase}")
                             added_space_list.append(final_phrase)
+                
+                if "#" in inner_phrases:
+                    
+                    sharp_inner_phrases = inner_phrases.split("#")
+
+                    for s_i_p in sharp_inner_phrases:
+
+                        slipped_sip = [word for word in s_i_p.split(" ") if word]
+                        if len(slipped_sip) > 1:
+                            for i, add_space_sharp in enumerate(slipped_sip):
+                                if self.count_uppercase_letters(add_space_sharp) > 1:
+                                
+                                    slipped_sip[i] = self.add_space_before_uppercase(add_space_sharp)
+                            
+                            final_phrase_sharp = " ".join(slipped_sip)
+                            if self.check_phrase(final_phrase_sharp):
+                                self.logger.log_debug(f"SHARP PHRASE: {final_phrase_sharp}")
+                                added_space_list.append(final_phrase_sharp)
+
+
+                            #self.logger.log_info(s_i_p)
+
+
+
         return added_space_list
 
 
@@ -151,8 +185,24 @@ class ExtractorServices:
 if __name__ == "__main__":
 
     
-    extractor = ExtractorServices()
+    extractor = ExtractorServices(show_logs=True)
     
+
+    
+
+
+    
+    filename = "modern_family"
+    url = "https://www.yourmodernfamily.com/your-modern-family-blog/"
+
+    valid_phrases = extractor.extract_valid_phrases(url=url, filename=filename)
+    for phrase in valid_phrases:
+        extractor.logger.log_info(phrase)
+
+
+    """
+    for phrase in valid_phrases:
+        extractor.logger.log_info(phrase)
 
     to_extract = {
         "Shrek": "https://imsdb.com/scripts/Shrek.html",
@@ -161,32 +211,7 @@ if __name__ == "__main__":
         "englishanyone": "https://englishanyone.com/english-phrases/"
 
     }
-
-
     
-    filename = "englishanyone"
-    url = "https://englishanyone.com/english-phrases/"
-
-    valid_phrases = extractor.extract_valid_phrases(url=url, filename=filename)
-    
-
-    
+    """
     
                     
-    # print(added_space_list)
-
-
-                            
-                                #print(addded_space)
-                #extracted_set.add(each)
-   
-            #for ph in phrases:
-            #    extracted_set.add(ph)
-            
-                
-            
-    
-    
-    
-
-
