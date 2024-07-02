@@ -37,7 +37,7 @@ class PhrasesComplexityClassifier():
         self.linsear_write_formula_weight =  linsear_write_formula_weight 
         self.gunning_fog_weight = gunning_fog_weight
         self.logger = logs.LogController(show_logs)
-        self.logger.log_info("Starting Phrases Complexity Classifier")
+        self.logger.log_info("Starting Phrases Complexity Classifier...")
 
     def normalize_scores(self, scores):
         self.logger.log_debug("Normalizing scores process...")
